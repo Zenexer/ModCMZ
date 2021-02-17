@@ -1,0 +1,23 @@
+bin/
+obj/
+publish/
+
+/Libraries/DNA/
+!/Libraries/DNA/README.txt
+
+# Just for safety:
+CastleMinerZ.exe
+CastleMinerZ.exe.*
+CastleMinerZ.application
+DNA.*.dll
+Services.Client.dll
+steam_api.dll
+Facebook.dll
+Facebook.xml
+sdkencryptedappticket.dll
+HiDefContentLib.dll
+ReachContentLib.dll
+
+*.suo
+*.suo.*
+*.user

@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0D9A01E5-1B7D-47BB-A3B3-ADC9098DAD8E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ModCMZ.Core</RootNamespace>
+    <AssemblyName>ModCMZ.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;STEAM</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;STEAM</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;STEAM</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;STEAM</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CastleMinerZ">
+      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\CastleMinerZ.exe</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DNA.Common">
+      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\DNA.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DNA.Steam">
+      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\DNA.Steam.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Game, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.GamerServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Storage, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Xna.Framework.Xact, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\ModCMZ\Libraries\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Services.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\SteamLibrary\SteamApps\common\CastleMiner Z\Services.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App.cs" />
+    <Compile Include="CecilExtension.cs" />
+    <Compile Include="DebugSandbox.cs" />
+    <Compile Include="Game\ComponentTransaction.cs" />
+    <Compile Include="Game\DrawableComparer.cs" />
+    <Compile Include="Game\GameApp.cs" />
+    <Compile Include="Game\GameComponentComparer.cs" />
+    <Compile Include="Game\TransactionState.cs" />
+    <Compile Include="Game\UpdateableComparer.cs" />
+    <Compile Include="Injection.cs" />
+    <Compile Include="Injectors\DNA\CastleMinerZ\Achievements\CastleMinerZAchievementManagerInjector.cs" />
+    <Compile Include="Injectors\DNA\CastleMinerZ\CastleMinerZPlayerStatsInjector.cs" />
+    <Compile Include="Injectors\DNA\CastleMinerZ\GraphicsProfileSupport\ProfiledContentManagerInjector.cs" />
+    <Compile Include="Injectors\DNA\CastleMinerZ\ProgramInjector.cs" />
+    <Compile Include="Injectors\DNA\DNAGameInjector.cs" />
+    <Compile Include="Injectors\DNA\Input\InputManagerInjector.cs" />
+    <Compile Include="Injectors\DNA\PromoCodeInjector.cs" />
+    <Compile Include="Injectors\IInjector.cs" />
+    <Compile Include="Injectors\Injector.cs" />
+    <Compile Include="Injectors\InjectorAttribute.cs" />
+    <Compile Include="Injectors\MethodInjectorAttribute.cs" />
+    <Compile Include="Injectors\ReplacesAttribute.cs" />
+    <Compile Include="Injectors\TargetedAttribute.cs" />
+    <Compile Include="Injectors\TypeReplacer.cs" />
+    <Compile Include="Mods\Command.cs" />
+    <Compile Include="Mods\CommandArguments.cs" />
+    <Compile Include="Mods\Core\Commands\ClearCommand.cs" />
+    <Compile Include="Mods\Core\Commands\ExitCommand.cs" />
+    <Compile Include="Mods\Core\Commands\QuitCommand.cs" />
+    <Compile Include="Mods\Core\Commands\HelpCommand.cs" />
+    <Compile Include="Mods\ICommand.cs" />
+    <Compile Include="Mods\Core\Components\ConsoleComponent.cs" />
+    <Compile Include="Mods\Core\Components\KeyboardComponent.cs" />
+    <Compile Include="Mods\Core\Components\KeyboardStateChangedEventArgs.cs" />
+    <Compile Include="Mods\Core\CoreMod.cs" />
+    <Compile Include="Mods\GameReadyEventArgs.cs" />
+    <Compile Include="Mods\IConsole.cs" />
+    <Compile Include="Mods\IMod.cs" />
+    <Compile Include="Mods\Mod.cs" />
+    <Compile Include="Mods\ModAttribute.cs" />
+    <Compile Include="Mods\ModContainerAttribute.cs" />
+    <Compile Include="Net\ModOnlineServices.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReflectionExtension.cs" />
+    <Compile Include="Injectors\DNA\CastleMinerZ\FrontEndScreenInjector.cs" />
+    <Compile Include="Runtime\DNA\CastleMinerZ\GraphicsProfileSupport\ModContentManager.cs" />
+    <Compile Include="Runtime\DNA\CastleMinerZ\GraphicsProfileSupport\ProfiledContentManagerMod.cs" />
+    <Compile Include="Runtime\DNA\DNAGameMod.cs" />
+    <Compile Include="Runtime\DNA\Input\InputManagerMod.cs" />
+    <Compile Include="Runtime\DNA\CastleMinerZ\ProgramMod.cs" />
+    <Compile Include="Runtime\DNA\PromoCodeMod.cs" />
+    <Compile Include="Wrappers\DNA\CastleMinerZ\Globalization\Strings.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ModCMZ.Bootstrap\ModCMZ.Bootstrap.csproj">
+      <Project>{07af8488-f313-4a9f-be11-d9b07ccd67a4}</Project>
+      <Name>ModCMZ.Bootstrap</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
