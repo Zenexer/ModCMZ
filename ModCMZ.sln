@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModCMZ", "ModCMZ\ModCMZ.csproj", "{59C76455-5E1F-431C-A361-3AAF83134C92}"
 EndProject
@@ -12,6 +12,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModCMZ.Mods.Basic", "ModCMZ.Mods.Basic\ModCMZ.Mods.Basic.csproj", "{CEA020C8-5C5B-4C09-8BEA-A2CEA0298EB6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModCMZ.Core", "ModCMZ.Core\ModCMZ.Core.csproj", "{0D9A01E5-1B7D-47BB-A3B3-ADC9098DAD8E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{715002CB-027F-4086-AF00-025DE360E535}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,5 +65,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CB20ECA7-8DA2-4F67-9B5A-A09F33740B98}
 	EndGlobalSection
 EndGlobal
