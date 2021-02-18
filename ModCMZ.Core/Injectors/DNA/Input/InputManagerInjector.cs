@@ -14,11 +14,7 @@ namespace ModCMZ.Core.Injectors.DNA.Input
 		[MethodInjector("Update")]
 		public void InjectUpdate()
 		{
-			Prepend(
-				Create(OpCodes.Ldarg_0),
-				GetModCall(),
-				Create(OpCodes.Brtrue_S, Instructions[0]),
-				Create(OpCodes.Ret));
+			PrependModCallInterceptable();
 		}
 	}
 }

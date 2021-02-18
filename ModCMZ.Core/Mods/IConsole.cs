@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ModCMZ.Core.Game;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace ModCMZ.Core.Mods
 {
     public interface IConsole
     {
+        GameApp Game { get; }
         bool IsVisible { get; set; }
         Dictionary<string, ICommand> Commands { get; }
 

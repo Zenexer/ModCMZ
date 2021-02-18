@@ -22,8 +22,14 @@ namespace ModCMZ.Mods.Basic.Injectors.DNA.CastleMinerZ.UI
 					&& i.Operand is MethodReference method
 					&& method.Name == "UpdateHostSession"
 					&& method.DeclaringType.FullName == "DNA.Net.GamerServices.NetworkSession",
-				GetModCall("UpdateHostSession_GameHasBegun")
+				Create(OpCodes.Call, GetModMethod("UpdateHostSession_GameHasBegun"))
 			);
+		}
+
+		[MethodInjector("ApplyDamage")]
+		public void InjectApplyDamage()
+        {
+			PrependModCallInterceptable();
 		}
 	}
 }

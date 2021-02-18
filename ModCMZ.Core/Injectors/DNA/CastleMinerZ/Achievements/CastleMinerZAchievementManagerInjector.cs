@@ -12,11 +12,11 @@ namespace ModCMZ.Core.Injectors.DNA.CastleMinerZ.Achievements
 	[Injector("CastleMinerZ", "DNA.CastleMinerZ.Achievements.CastleMinerZAchievementManager")]
 	public sealed class CastleMinerZAchievementManagerInjector : Injector
 	{
-		// Prevents achievements from being reported to Steam during debugging
-#if DEBUG
 		[MethodInjector("OnAchieved")]
 		public void InjectOnAchieved()
 		{
+#if DEBUG
+			// Prevents achievements from being reported to Steam during debugging
 			for (int i = 0; i < Instructions.Count; i++)
 			{
 				if (Instructions[i].OpCode == OpCodes.Callvirt && ((MethodReference)Instructions[i].Operand).Name == "get_SteamAPI")
@@ -33,7 +33,7 @@ namespace ModCMZ.Core.Injectors.DNA.CastleMinerZ.Achievements
 			}
 
 			throw new Exception("Couldn't find instruction pattern");
-		}
 #endif
+		}
 	}
 }

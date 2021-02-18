@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +16,14 @@ namespace ModCMZ.Core.Injectors
 	public abstract class Injector : IInjector
 	{
 		private const bool USE_SHORT_FORM = false;
+
+		private static readonly OpCode[] LdargOpCodes = new[]
+		{
+			OpCodes.Ldarg_0,
+			OpCodes.Ldarg_1,
+			OpCodes.Ldarg_2,
+			OpCodes.Ldarg_3,
+		};
 
 		public delegate void MethodInject();
 
@@ -248,6 +257,11 @@ namespace ModCMZ.Core.Injectors
 			Body.Variables.Clear();
 		}
 
+
+		protected void Prepend(params Instruction[][] instructions) => Prepend(instructions.SelectMany(x => x));
+
+		protected void Prepend(IEnumerable<Instruction> instructions) => Prepend(instructions.ToArray());
+
 		protected void Prepend(params Instruction[] instructions)
 		{
 			for (var i = 0; i < instructions.Length; i++)
@@ -269,6 +283,10 @@ namespace ModCMZ.Core.Injectors
 				}
 			}
 		}
+
+		protected void Append(IEnumerable<Instruction> instructions) => Append(instructions.ToArray());
+
+		protected void Append(params Instruction[][] instructions) => Append(instructions.SelectMany(x => x));
 
 		protected void Append(params Instruction[] instructions)
 		{
@@ -331,29 +349,32 @@ namespace ModCMZ.Core.Injectors
 			}
 		}
 
-		protected void AppendModCall()
-		{
-			if (Method.IsStatic)
-			{
-				Append(GetModCall());
-			}
-			else
-			{
-				Append(Create(OpCodes.Ldarg_0), GetModCall());
-			}
-		}
+		protected void InsertModCallAfter(Instruction target, string format = null, string prefix = null, string suffix = null) => InsertAfter(target, GetModCall(format, prefix, suffix));
 
-		protected void PrependModCall()
-		{
-			if (Method.IsStatic)
-			{
-				Prepend(GetModCall());
+		protected void InsertAfter(Instruction target, params Instruction[] instructions) => InsertAfter(target, (IEnumerable<Instruction>)instructions);
+
+		protected void InsertAfter(Instruction target, params Instruction[][] instructions) => InsertAfter(target, instructions.SelectMany(x => x));
+
+		protected void InsertAfter(Instruction target, IEnumerable<Instruction> instructions)
+        {
+			foreach (var instruction in instructions)
+            {
+				IL.InsertAfter(target, instruction);
+				target = instruction;
+            }
+        }
+
+		protected void AppendModCall() => Append(GetModCall());
+
+		protected void PrependModCall() => Prepend(GetModCall());
+
+		protected void PrependModCallInterceptable() => Prepend(
+			GetModCall(),
+			new[] {
+				Create(OpCodes.Brtrue_S, Instructions[0]),
+				Create(OpCodes.Ret),
 			}
-			else
-			{
-				Prepend(Create(OpCodes.Ldarg_0), GetModCall());
-			}
-		}
+		);
 
 		/// <summary>
 		/// Gets a standard mod method.
@@ -401,12 +422,32 @@ namespace ModCMZ.Core.Injectors
 			return Module.Import(modMethod);
 		}
 
-		protected Instruction GetModCall(string format = null, string prefix = null, string suffix = null)
+		protected Instruction[] GetModCall(string format = null, string prefix = null, string suffix = null)
 		{
-			return IL.Create(OpCodes.Call, GetModMethod(format, prefix, suffix));
+			var method = GetModMethod(format, prefix, suffix);
+			var paramCount = method.Parameters.Count;
+			var instrs = new Instruction[paramCount + 1];
+
+			for (var i = 0; i < paramCount && i < LdargOpCodes.Length; i++)
+            {
+				instrs[i] = IL.Create(LdargOpCodes[i]);
+            }
+
+			for (var i = LdargOpCodes.Length; i < paramCount; i++)
+            {
+				instrs[i] = IL.Create(OpCodes.Ldarg_S, Method.Parameters[i]);
+            }
+
+			instrs[paramCount] = IL.Create(OpCodes.Call, method);
+
+			return instrs;
 		}
 
-		protected bool Replace(Func<Instruction, bool> predicate, Instruction instruction)
+		protected bool Replace(Func<Instruction, bool> predicate, Instruction instruction) => Replace(predicate, new[] { instruction });
+
+		protected bool Replace(Func<Instruction, bool> predicate, IEnumerable<Instruction> instructions) => Replace(predicate, instructions.ToArray());
+
+		protected bool Replace(Func<Instruction, bool> predicate, Instruction[] instructions)
 		{
 			var first = Instructions.FirstOrDefault(predicate);
 			if (first == null)
@@ -415,7 +456,13 @@ namespace ModCMZ.Core.Injectors
 				throw new Exception("Must replace at least one instruction");
 			}
 
-			IL.Replace(first, instruction);
+			IL.Replace(first, instructions[0]);
+
+			for (var i = 1; i < instructions.Length; i++)
+            {
+				IL.InsertAfter(instructions[i - 1], instructions[i]);
+            }
+
 			return true;
 		}
 

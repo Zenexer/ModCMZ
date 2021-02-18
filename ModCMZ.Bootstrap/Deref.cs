@@ -58,25 +58,11 @@ namespace ModCMZ.Bootstrap
 				var instance = instanceProperty.GetValue(null);
 			}
 #elif STEAM
-			try
-			{
-				// Using reflection to invoke the native method skips an unreliable step, but we'll leave this here in case it breaks.
-				//AppDomain.CurrentDomain.ExecuteAssembly(Assemblies["CastleMinerZ"].Location);
+			// Using reflection to invoke the native method skips an unreliable step, but we'll leave this here in case it breaks.
+			//AppDomain.CurrentDomain.ExecuteAssembly(Assemblies["CastleMinerZ"].Location);
 
-				var nExecuteAssembly = typeof(AppDomain).GetMethod("nExecuteAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
-				nExecuteAssembly.Invoke(AppDomain.CurrentDomain, new object[] { Assemblies["CastleMinerZ"], ProgramArgs });
-			}
-			catch (Exception ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw ex.InnerException;
-				}
-				else
-				{
-					throw;
-				}
-			}
+			var nExecuteAssembly = typeof(AppDomain).GetMethod("nExecuteAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
+			nExecuteAssembly.Invoke(AppDomain.CurrentDomain, new object[] { Assemblies["CastleMinerZ"], ProgramArgs });
 #endif
 		}
 	}

@@ -13,30 +13,17 @@ namespace ModCMZ.Core.Injectors.DNA.CastleMinerZ
 	[Serializable]
 	public sealed class CastleMinerZPlayerStatsInjector : Injector
 	{
-		// Would force UndeadDragonKills to always return 5
-		/*
 		[MethodInjector("get_UndeadDragonKills")]
 		public void InjectGetUndeadDragonKills()
 		{
+			// Example: Force UndeadDragonKills to always return 5
+			/*
 			ClearMethod();
 			Append(
 				Create(OpCodes.Ldc_I4_5),
 				Create(OpCodes.Ret)
 			);
-		}
-		*/
-
-		// ???
-		[MethodInjector(".ctor")]
-		public void InjectCtor()
-		{
-			Replace(
-				i =>
-					i.OpCode == OpCodes.Ldsfld
-					&& ((FieldReference)i.Operand).FullName == "DNA.CastleMinerZ.CastleMinerZGame DNA.CastleMinerZ.CastleMinerZGame::Instance"
-					&& i.Next.OpCode == OpCodes.Brfalse_S,
-				OpCodes.Ldnull
-			);
+			*/
 		}
 	}
 }

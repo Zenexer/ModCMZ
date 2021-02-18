@@ -13,19 +13,19 @@ namespace ModCMZ.Core.Injectors.DNA
 		[MethodInjector("Initialize")]
 		public void InjectInitialize()
 		{
-			Append(Create(OpCodes.Ldarg_0), GetModCall());
+			AppendModCall();
 		}
 
 		[MethodInjector("Update")]
 		public void InjectUpdate()
 		{
-			Prepend(Create(OpCodes.Ldarg_0), Create(OpCodes.Ldarg_1), GetModCall());
+			PrependModCall();
 		}
 
 		[MethodInjector("Draw")]
 		public void InjectDraw()
 		{
-			Append(Create(OpCodes.Ldarg_0), Create(OpCodes.Ldarg_1), GetModCall());
+			AppendModCall();
 		}
 	}
 }

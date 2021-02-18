@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using DNA;
+using DNA.CastleMinerZ;
+using DNA.Net.GamerServices;
 using Microsoft.Xna.Framework;
 
 namespace ModCMZ.Core.Game
@@ -27,7 +29,7 @@ namespace ModCMZ.Core.Game
 
         public GameComponentCollection Components { get; private set; }
         public bool IsInitialized { get; private set; }
-        public DNAGame Game { get; private set; }
+        public CastleMinerZGame Game { get; private set; }
         public Form Form { get; private set; }
 
         public GameApp()
@@ -50,7 +52,7 @@ namespace ModCMZ.Core.Game
         public static void InitializeHook(DNAGame instance)
         {
             var current = App.Current.Game;
-            current.Game = instance;
+            current.Game = (CastleMinerZGame)instance;
 
             current.Initialize();
         }

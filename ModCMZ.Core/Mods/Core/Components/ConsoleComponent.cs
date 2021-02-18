@@ -336,7 +336,14 @@ namespace ModCMZ.Core.Mods.Core.Components
 				return;
             }
 
-			command.Run(new CommandArguments(tokens));
+			try
+			{
+				command.Run(new CommandArguments(tokens));
+			}
+			catch (CommandException ex)
+            {
+				WriteLine("Error: {0}", ex.Message);
+            }
 		}
 
 		private void UpdatePendingLines()

@@ -85,7 +85,9 @@ namespace ModCMZ.Core
 
 		public App()
 		{
+#if !DEBUG
 			AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+#endif
 			Application.EnableVisualStyles();
 
 			var xnaDir = Path.GetDirectoryName(typeof(Microsoft.Xna.Framework.Game).Assembly.Location);
@@ -190,24 +192,29 @@ namespace ModCMZ.Core
 
 		public void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
-			if (Debugger.IsAttached)
-			{
-				Exception ex = e.ExceptionObject as Exception;
-				if (ex != null)
-				{
-					throw ex;
-				}
-			}
-
 			const string FORMAT = "Unhandled exception:\r\n{0}";
+
+			var message = "";
+
+			for (var ex = e.ExceptionObject as Exception; ex != null; ex = ex.InnerException)
+            {
+				if (message != "")
+                {
+					message += "\r\n\r\ncaused by:\r\n";
+                }
+
+				message += ex;
+            }
+
+			File.WriteAllText(Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "crash.txt"), message);
 
 			if (e.IsTerminating)
 			{
-				Fatal(FORMAT, e.ExceptionObject);
+				Fatal(FORMAT, message);
 			}
 			else
 			{
-				Error(FORMAT, e.ExceptionObject);
+				Error(FORMAT, message);
 			}
 		}
 
@@ -273,6 +280,7 @@ namespace ModCMZ.Core
 			{
 				Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Vanilla"),
 				@"C:\Program Files (x86)\Steam\steamapps\common",
+				@"F:\Program Files (x86)\Steam\steamapps\common",
 				@"C:\Program Files\Steam\steamapps\common",
 				@"D:\SteamLibrary\SteamApps\common",
 				@"D:\Games\Steam\steamapps\common",
