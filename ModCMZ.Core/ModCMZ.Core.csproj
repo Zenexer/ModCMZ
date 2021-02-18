@@ -34,15 +34,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CastleMinerZ">
-      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\CastleMinerZ.exe</HintPath>
+      <HintPath>..\Libraries\DNA\CastleMinerZ.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DNA.Common">
-      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\DNA.Common.dll</HintPath>
+      <HintPath>..\Libraries\DNA\DNA.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DNA.Steam">
-      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\DNA.Steam.dll</HintPath>
+      <HintPath>..\Libraries\DNA\DNA.Steam.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
@@ -54,9 +54,9 @@
     <Reference Include="Mono.Cecil">
       <HintPath>..\ModCMZ\Libraries\Mono.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="Services.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\SteamLibrary\SteamApps\common\CastleMiner Z\Services.Client.dll</HintPath>
+    <Reference Include="Services.Client">
+      <HintPath>..\Libraries\DNA\Services.Client.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

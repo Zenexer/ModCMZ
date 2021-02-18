@@ -32,15 +32,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CastleMinerZ">
-      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\CastleMinerZ.exe</HintPath>
+      <HintPath>..\Libraries\DNA\CastleMinerZ.exe</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DNA.Common">
-      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\DNA.Common.dll</HintPath>
+      <HintPath>..\Libraries\DNA\DNA.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DNA.Steam">
-      <HintPath>D:\Games\Steam\steamapps\common\CastleMiner Z\DNA.Steam.dll</HintPath>
+      <HintPath>..\Libraries\DNA\DNA.Steam.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />

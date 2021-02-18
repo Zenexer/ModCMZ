@@ -2,8 +2,8 @@ bin/
 obj/
 publish/
 
-/Libraries/DNA/
-!/Libraries/DNA/README.txt
+/Libraries/DNA/*.dll
+/Libraries/DNA/*.exe
 
 # Just for safety:
 CastleMinerZ.exe

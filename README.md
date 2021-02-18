@@ -14,8 +14,8 @@ This repo shouldn't contain any reverse-engineered code from CastleMiner Z.  The
 
 Before attempting to compile the solution:
 
-1. Ensure that you fix the references to any CastleMiner Z-related assemblies.
-2. Once you've replaced the references, set each one's `Copy Local` property to `False`.
+1. Make sure you're using Visual Studio 2019.
+2. Follow the instructions in /Libraries/DNA/README.txt.
 3. If your CastleMiner Z installation is in an unusual location, add it to the list in `ModCMZ.Core.App.FindSteamFolder` (Project `ModCMZ.Core`, file `App.cs`, method `FindSteamFolder`).
 
 # Known issues #
