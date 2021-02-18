@@ -1,6 +1,7 @@
 bin/
 obj/
 publish/
+.vs/
 
 /Libraries/DNA/*.dll
 /Libraries/DNA/*.exe
