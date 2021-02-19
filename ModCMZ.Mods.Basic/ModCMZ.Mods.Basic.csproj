@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicMod.cs" />
+    <Compile Include="Commands\FlyCommand.cs" />
     <Compile Include="Commands\ModeCommand.cs" />
     <Compile Include="Commands\GodCommand.cs" />
     <Compile Include="Commands\ListCommand.cs" />

@@ -284,6 +284,7 @@ namespace ModCMZ.Core
 				@"C:\Program Files\Steam\steamapps\common",
 				@"D:\SteamLibrary\SteamApps\common",
 				@"D:\Games\Steam\steamapps\common",
+				@"D:\steam\steamapps\common",
 			})
 			{
 				if (!Directory.Exists(dir))
