@@ -64,6 +64,7 @@ namespace ModCMZ.Mods.Basic.Components
             {
                 form.FormBorderStyle = FormBorderStyle.Sizable;
                 form.MaximizeBox = true;
+                form.WindowState = FormWindowState.Maximized;
             }
         }
     }
