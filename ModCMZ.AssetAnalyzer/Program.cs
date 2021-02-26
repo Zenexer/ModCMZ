@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,7 +16,7 @@ namespace ModCMZ.AssetAnalyzer
 		{
 			try
 			{
-				string testFile = Path.Combine("Test", "SmokeEffect.xnb");
+				var testFile = @"D:\Games\Steam\steamapps\common\CastleMiner Z\Content\Enemies\Zombies\Diffuse01_0.xnb";
 
 				if (Debugger.IsAttached && File.Exists(testFile))
 				{
@@ -121,10 +122,12 @@ namespace ModCMZ.AssetAnalyzer
 					}
 				}
 			}
-			catch
+#if !DEBUG
+			catch (Exception ex)
 			{
-				Console.WriteLine("Error: File {0} is invalid.", file);
+				Console.WriteLine("Error: File {0} is invalid: {1}", file, ex.Message);
 			}
+#endif
 			finally
 			{
 				Console.WriteLine();
@@ -134,7 +137,14 @@ namespace ModCMZ.AssetAnalyzer
 		private static void AnalyzeXnbContent(Stream stream, ExposedBinaryReader bin)
 		{
 			var typeReaderCount = bin.Read7BitEncodedIntEx();
-			Console.WriteLine("Type Reader Count: {0}", typeReaderCount);
+
+			if (typeReaderCount > 1024)
+            {
+				Console.WriteLine("Too many type readers; aborting");
+				return;
+			}
+
+			var typeReaders = new string[typeReaderCount];
 
 			for (var i = 0; i < typeReaderCount; i++)
 			{
@@ -145,7 +155,62 @@ namespace ModCMZ.AssetAnalyzer
 
 				var readerVersionNumber = bin.ReadInt32();
 				Console.WriteLine("    Reader Version Number: {0}", readerVersionNumber);
+
+				typeReaders[i] = typeReaderName;
 			}
+
+			var sharedResourceCount = bin.Read7BitEncodedIntEx();
+			Console.WriteLine("Shared Resource Count: {0}", sharedResourceCount);
+
+			// There's always one primary object that's separate from the shared resources, so use <=
+			for (var resourceIdx = 0; resourceIdx <= sharedResourceCount; resourceIdx++)
+            {
+				Console.WriteLine("--- Resource {0} ---", resourceIdx);
+				var typeId = bin.Read7BitEncodedIntEx();
+				Console.WriteLine("typeId: {0}", typeId);
+
+				if (typeId > 0 && typeId > typeReaders.Length)
+                {
+					Console.WriteLine("typeId {0} doesn't have a corresponding type reader declared in the file; aborting", typeId);
+					return;
+                }
+
+				var typeReader = typeId > 0 ? typeReaders[typeId - 1] : "null";
+
+				Console.WriteLine("Type reader: {0}", typeReader);
+
+
+				var typeReaderClass = typeReader.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)[0];
+
+				switch (typeReaderClass)
+                {
+					case "Microsoft.Xna.Framework.Content.Texture2DReader":
+						var surfaceFormat = (SurfaceFormat)bin.ReadInt32();
+						var width = (int)bin.ReadUInt32();
+						var height = (int)bin.ReadUInt32();
+						var mipCount = (int)bin.ReadUInt32();
+
+						Console.WriteLine("Surface format: {0}", surfaceFormat);
+						Console.WriteLine("Width: {0}", width);
+						Console.WriteLine("Height: {0}", height);
+						Console.WriteLine("Mip count: {0}", mipCount);
+
+						var decoder = new DxtDecoder(width, height, surfaceFormat);
+						
+						for (var mipIdx = 0; mipIdx < mipCount; mipIdx++)
+                        {
+							var dataSize = bin.ReadUInt32();
+							Console.WriteLine("Data size: {0}", dataSize);
+
+							var imageData = bin.ReadBytes(checked((int)dataSize));
+
+							Console.WriteLine("Data preview: {0}", BitConverter.ToString(imageData, 0, Math.Min(16, imageData.Length)));
+
+							var colorData = decoder.Decode(imageData);
+                        }
+						break;
+				}
+            }
 		}
 	}
 }
