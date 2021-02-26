@@ -61,6 +61,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -82,8 +85,8 @@
     <Compile Include="Injection.cs" />
     <Compile Include="Injectors\DNA\CastleMinerZ\Achievements\CastleMinerZAchievementManagerInjector.cs" />
     <Compile Include="Injectors\DNA\CastleMinerZ\CastleMinerZPlayerStatsInjector.cs" />
-    <Compile Include="Injectors\DNA\CastleMinerZ\GraphicsProfileSupport\ProfiledContentManagerInjector.cs" />
     <Compile Include="Injectors\DNA\CastleMinerZ\ProgramInjector.cs" />
+    <Compile Include="Injectors\DNA\CastleMinerZ\UI\LoadScreenInjector.cs" />
     <Compile Include="Injectors\DNA\DNAGameInjector.cs" />
     <Compile Include="Injectors\DNA\Input\InputManagerInjector.cs" />
     <Compile Include="Injectors\DNA\PromoCodeInjector.cs" />
@@ -118,7 +121,7 @@
     <Compile Include="ReflectionExtension.cs" />
     <Compile Include="Injectors\DNA\CastleMinerZ\FrontEndScreenInjector.cs" />
     <Compile Include="Runtime\DNA\CastleMinerZ\GraphicsProfileSupport\ModContentManager.cs" />
-    <Compile Include="Runtime\DNA\CastleMinerZ\GraphicsProfileSupport\ProfiledContentManagerMod.cs" />
+    <Compile Include="Runtime\DNA\CastleMinerZ\UI\LoadScreenMod.cs" />
     <Compile Include="Runtime\DNA\DNAGameMod.cs" />
     <Compile Include="Runtime\DNA\Input\InputManagerMod.cs" />
     <Compile Include="Runtime\DNA\CastleMinerZ\ProgramMod.cs" />
@@ -130,6 +133,9 @@
       <Project>{07af8488-f313-4a9f-be11-d9b07ccd67a4}</Project>
       <Name>ModCMZ.Bootstrap</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
