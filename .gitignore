@@ -2,6 +2,7 @@ bin/
 obj/
 publish/
 .vs/
+packages/
 
 /Libraries/DNA/*.dll
 /Libraries/DNA/*.exe
