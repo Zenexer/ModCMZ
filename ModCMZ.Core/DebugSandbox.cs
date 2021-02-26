@@ -8,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Content;
-using ModCMZ.Core.Injectors.DNA.CastleMinerZ.GraphicsProfileSupport;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
