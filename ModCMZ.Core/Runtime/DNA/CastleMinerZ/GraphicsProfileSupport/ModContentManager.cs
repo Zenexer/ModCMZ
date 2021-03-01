@@ -6,6 +6,7 @@ using DNA.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using ModCMZ.Core.Mods;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,6 +14,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,6 +66,7 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 		public Dictionary<string, string> AvailableUserTextures { get; set; } = new Dictionary<string, string>();
 		public Dictionary<string, Texture2D> PreloadedUserTextures { get; set; } = new Dictionary<string, Texture2D>();
 
+		private readonly ConditionalWeakTable<string, IMod> _modContentClaims = new ConditionalWeakTable<string, IMod>();
 		private Stopwatch _loadingTimer;
 
 		public string FullRootDirectory => _fullRootDirectory.Value;
@@ -73,7 +76,7 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 				.GetValue(this)
 		);
 
-		private readonly Dictionary<string, string> ResolvedAssetNames = new Dictionary<string, string>();
+		private readonly Dictionary<string, string> _resolvedAssetNames = new Dictionary<string, string>();
 
 		public ModContentManager(IServiceProvider services, string reachRoot, string hiDefRoot, int textureLevel)
 			//: base(services, reachRoot, hiDefRoot, textureLevel)
@@ -83,7 +86,7 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 			var instanceField = argsType.GetField("Instance");
 			var argsInstance = instanceField.GetValue(null);
 			var textureFolderField = argsType.GetField("TextureFolder");
-			var textureFolder = (string)textureFolderField.GetValue(argsInstance) ?? "CustomTextures";
+			var textureFolder = (string)textureFolderField.GetValue(argsInstance) ?? Path.Combine(Path.GetDirectoryName(typeof(ModContentManager).Assembly.Location), "CustomTextures");
 
 			HiDefRoot = hiDefRoot;
 			ReachRoot = reachRoot;
@@ -91,7 +94,7 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 			_loadingTimer = Stopwatch.StartNew();
 			UserTextureFolder = textureFolder;
 
-			if (textureFolder == null)
+			if (textureFolder == null || !Directory.Exists(textureFolder))
 			{
 				return;
 			}
@@ -130,6 +133,21 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 				}
 			}
 		}
+
+		public void ClaimContent(IMod mod, string assetName)
+        {
+			if (_modContentClaims.TryGetValue(assetName, out var existingMod))
+            {
+				if (existingMod == mod)
+                {
+					return;
+                }
+
+				throw new Exception($"{mod.Id} tried to claim {assetName}, but it's already claimed by {existingMod.Id}");
+            }
+
+			_modContentClaims.Add(assetName, mod);
+        }
 
 		public Texture2D TryLoadFromFile(string assetName)
 		{
@@ -179,7 +197,7 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 
 		public override T Load<T>(string assetName)
 		{
-			if (ResolvedAssetNames.TryGetValue(assetName, out var knownAssetName))
+			if (_resolvedAssetNames.TryGetValue(assetName, out var knownAssetName))
             {
 				return base.Load<T>(knownAssetName);
             }
@@ -219,12 +237,30 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport
 				if (File.Exists(fileName))
                 {
 					var value = base.Load<T>(resolvedAssetName);
-					ResolvedAssetNames.Add(assetName, resolvedAssetName);  // Ensure this runs after it loads so we don't store something that throws an exception
+					_resolvedAssetNames.Add(assetName, resolvedAssetName);  // Ensure this runs after it loads so we don't store something that throws an exception
 					return value;
 				}
 			}
 
 			throw new FileNotFoundException($"Content not found: {assetName} -> {string.Join(", ", resolvedAssets.Select(x => x.fileName))}");
 		}
-	}
+
+        protected override Stream OpenStream(string assetName)
+		{
+			if (_modContentClaims.TryGetValue(assetName, out var mod))
+            {
+				return mod.OpenContentStream(assetName);
+            }
+
+			var delimPos = assetName.IndexOf('\\');
+			var modName = delimPos >= 3 ? assetName.Remove(delimPos) : null;
+
+			if (modName != null && App.Current.Mods.TryGetValue(modName, out mod))
+            {
+				return mod.OpenContentStream(assetName.Substring(delimPos - 1));
+            }
+
+			return base.OpenStream(assetName);
+        }
+    }
 }

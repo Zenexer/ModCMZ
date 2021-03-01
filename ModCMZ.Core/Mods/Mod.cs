@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Resources;
 using System.Text;
 using System.Threading.Tasks;
 using ModCMZ.Core.Game;
+using ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport;
 
 namespace ModCMZ.Core.Mods
 {
@@ -16,12 +19,12 @@ namespace ModCMZ.Core.Mods
         /// <remarks>
         /// Warning: Invoked from the main application domain, not the game's application domain.  Don't store anything during this call.
         /// </remarks>
-        public event EventHandler Launching;
+        public event Action Launching;
         
         /// <summary>
         /// CastleMiner Z has launched.  
         /// </summary>
-        public event EventHandler Launched;
+        public event Action Launched;
 
         /// <summary>
         /// First event in the new application domain.
@@ -29,49 +32,53 @@ namespace ModCMZ.Core.Mods
         /// <remarks>
         /// You can use this to add your other events, but that's probably a premature optimization.
         /// </remarks>
-        public event EventHandler DomainReady;
+        public event Action DomainReady;
 
         /// <summary>
         /// <see cref="GameApp"/> is ready.
         /// </summary>
-        public event GameReadyEventHandler GameReady;
+        public event Action<GameApp> GameReady;
+
+        /// <summary>
+        /// Inventory items are being registered.
+        /// </summary>
+        public event Action<ModContentManager> RegisteringItems;
+
+        public event Action<Action<string>> ClaimingContent;
 
         /// <summary>
         /// Components have been initialized.  Called after <see cref="GameReady"/>.
         /// </summary>
-        public event EventHandler ComponentsReady;
+        public event Action ComponentsReady;
 
-        private bool m_CheckedAttribute;
-        private ModAttribute m_Attribute;
-        private Version m_Version;
+        private bool _checkedAttribute;
+        private ModAttribute _attribute;
+        private Version _version;
 
         public ModAttribute Attribute
         {
             get
             {
-                if (!m_CheckedAttribute)
+                if (!_checkedAttribute)
                 {
-                    m_Attribute = GetType().GetCustomAttribute<ModAttribute>();
-                    m_CheckedAttribute = true;
+                    _attribute = GetType().GetCustomAttribute<ModAttribute>();
+                    _checkedAttribute = true;
                 }
 
-                return m_Attribute;
+                return _attribute;
             }
         }
 
-        public string Name
-        {
-            get
-            {
-                return Attribute == null ? null : Attribute.Name;
-            }
-        }
+        public string Id => Attribute.Id;
+        public string Name => Attribute?.Name;
+        public virtual string Author => Attribute?.Author;
+        public virtual string Description => Attribute?.Description;
 
         public virtual Version Version
         {
             get
             {
-                if (m_Version == null)
+                if (_version == null)
                 {
                     if (Attribute == null)
                     {
@@ -86,80 +93,77 @@ namespace ModCMZ.Core.Mods
                             return null;
                         }
 
-                        Version version;
-                        if (Version.TryParse(attribute.Version, out version))
+                        if (Version.TryParse(attribute.Version, out var version))
                         {
-                            m_Version = version;
+                            _version = version;
                         }
                     }
                     else
                     {
-                        m_Version = Attribute.Version;
+                        _version = Attribute.Version;
                     }
                 }
 
-                return m_Version;
+                return _version;
             }
         }
 
-        public virtual string Author
+        private Dictionary<string, string> _embeddedContent;
+        private IReadOnlyDictionary<string, string> EmbeddedContent
         {
             get
             {
-                return Attribute == null ? null : Attribute.Author;
+                if (_embeddedContent == null)
+                {
+                    var embeddedContent = new Dictionary<string, string>();
+                    var contentPrefix = $"{Assembly.GetName().Name}.Content.";
+
+                    var allResourceNames = Assembly.GetManifestResourceNames();
+                    var contentResourceNames = allResourceNames.Where(x => x.StartsWith(contentPrefix));
+
+                    foreach (var resourceName in contentResourceNames)
+                    {
+                        var assetKey = resourceName.Substring(contentPrefix.Length);
+                        assetKey = assetKey.Remove(assetKey.LastIndexOf('.'));
+                        assetKey = assetKey.ToLowerInvariant();
+
+                        embeddedContent.Add(assetKey, resourceName);
+                    }
+
+                    _embeddedContent = embeddedContent;
+                }
+
+                return _embeddedContent;
             }
         }
 
-        public virtual string Description
+        public Assembly Assembly => GetType().Assembly;
+
+        public virtual Stream OpenContentStream(string assetName)
         {
-            get
-            {
-                return Attribute == null ? null : Attribute.Description;
-            }
+            var assetKey = assetName
+                .Replace('\\', '.')
+                .Replace('/', '.')
+                .ToLowerInvariant();
+
+            var resourceName = EmbeddedContent[assetKey];
+
+            return Assembly.GetManifestResourceStream(resourceName);
         }
 
-        #region IMod Members
 
-        public virtual void OnLaunched()
-        {
-            if (Launched != null)
-            {
-                Launched.Invoke(this, EventArgs.Empty);
-            }
-        }
+        public virtual void OnLaunched() => Launched?.Invoke();
 
-        public virtual void OnLaunching()
-        {
-            if (Launching != null)
-            {
-                Launching.Invoke(this, EventArgs.Empty);
-            }
-        }
+        public virtual void OnLaunching() => Launching?.Invoke();
 
-        public virtual void OnDomainReady()
-        {
-            if (DomainReady != null)
-            {
-                DomainReady.Invoke(this, EventArgs.Empty);
-            }
-        }
+        public virtual void OnDomainReady() => DomainReady?.Invoke();
 
-        public virtual void OnGameReady(GameApp game)
-        {
-            if (GameReady != null)
-            {
-                GameReady.Invoke(this, new GameReadyEventArgs(game));
-            }
-        }
+        public virtual void OnGameReady(GameApp game) => GameReady?.Invoke(game);
 
-        public virtual void OnComponentsReady()
-        {
-            if (ComponentsReady != null)
-            {
-                ComponentsReady.Invoke(this, EventArgs.Empty);
-            }
-        }
+        public virtual void OnComponentsReady() => ComponentsReady?.Invoke();
 
-        #endregion
+        public virtual void OnRegisteringItems(ModContentManager content) => RegisteringItems?.Invoke(content);
+
+        public virtual void OnClaimingContent(ModContentManager content) => ClaimingContent?.Invoke((assetName) => content.ClaimContent(this, assetName));
     }
 }

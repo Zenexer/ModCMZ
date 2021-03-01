@@ -27,81 +27,60 @@ namespace ModCMZ.Core.Injectors
 
 		public delegate void MethodInject();
 
-		public event EventHandler Injecting;
-		public event EventHandler Injected;
+		public event Action Injecting;
+		public event Action Injected;
 
 		public Injection Injection { get; protected set; }
 
-		public bool UseShortForm
-		{
-			get
-			{
-				return USE_SHORT_FORM;
-			}
-		}
+		public bool UseShortForm => USE_SHORT_FORM;
 
 		[NonSerialized]
-		private TypeDefinition m_Type;
-		public TypeDefinition Type
-		{
-			get
-			{
-				return m_Type;
-			}
-		}
+		private TypeDefinition _type;
+		public TypeDefinition Type => _type;
 
 		[NonSerialized]
-		private MethodDefinition m_Method;
-		public MethodDefinition Method
-		{
-			get
-			{
-				return m_Method;
-			}
-		}
+		private MethodDefinition _method;
+		public MethodDefinition Method => _method;
 
 		[NonSerialized]
-		private TypeDefinition m_ModType;
+		private TypeDefinition _modType;
 		public virtual TypeDefinition ModType
 		{
 			get
 			{
-				if (m_ModType == null)
+				if (_modType == null)
 				{
 					var typeName = (string.IsNullOrEmpty(ModTypeNamespace) ? "" : ModTypeNamespace + ".") + ModTypeName;
-					var types = App.Current.GetModTypes().Select(x => x.FullName).ToArray();
 					var type = App.Current.GetModType(typeName);
-					var assemblies = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.FullName).ToArray();
-					Debug.Assert(type != null);
-					m_ModType = Module.Import(type).Resolve();
+
+					if (type == null)
+					{
+#if DEBUG
+						// If the exception below is thrown, these may be useful to examine with a debugger.
+						var types = App.Current.GetModTypes().Select(x => x.FullName).ToArray();
+						var assemblies = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.FullName).ToArray();
+#endif
+						throw new Exception($"Expected {typeName} to exist, but it can't be found");
+                    }
+
+					_modType = Module.Import(type).Resolve();
 				}
 
-				return m_ModType;
+				return _modType;
 			}
 		}
 
 		[NonSerialized]
-		private string m_ModTypeName;
-		public virtual string ModTypeName
-		{
-			get
-			{
-				if (m_ModTypeName == null)
-				{
-					m_ModTypeName = GetType().GetCustomAttribute<InjectorAttribute>().Type.Split('.').Last() + "Mod";
-				}
-
-				return m_ModTypeName;
-			}
-		}
+		private string _modTypeName;
+		public virtual string ModTypeName => _modTypeName ?? (_modTypeName = GetType().GetCustomAttribute<InjectorAttribute>().Type.Split('.').Last() + "Mod");
 
 		[NonSerialized]
-		private string m_ModTypeNamespace;
+		private string _modTypeNamespace;
 		public virtual string ModTypeNamespace
 		{
 			get
 			{
-				if (m_ModTypeNamespace == null)
+				if (_modTypeNamespace == null)
 				{
 					var ns = GetType().Namespace;
 					if (ns == null)
@@ -122,73 +101,37 @@ namespace ModCMZ.Core.Injectors
 						ns = ns.Split('.')[0] + ".Runtime";
 					}
 
-					m_ModTypeNamespace = ns;
+					_modTypeNamespace = ns;
 				}
 
-				return m_ModTypeNamespace;
+				return _modTypeNamespace;
 			}
 		}
 
 		[NonSerialized]
-		private cil::MethodBody m_Body;
-		protected cil::MethodBody Body
-		{
-			get
-			{
-				return m_Body;
-			}
-		}
+		private cil::MethodBody _body;
+        protected cil::MethodBody Body => _body;
 
-		[NonSerialized]
-		private monogeneric::Collection<Instruction> m_Instructions;
-		protected monogeneric::Collection<Instruction> Instructions
-		{
-			get
-			{
-				return m_Instructions;
-			}
-		}
+        [NonSerialized]
+		private monogeneric::Collection<Instruction> _instructions;
+        protected monogeneric::Collection<Instruction> Instructions => _instructions;
 
-		[NonSerialized]
-		private ILProcessor m_IL;
-		protected ILProcessor IL
-		{
-			get
-			{
-				return m_IL;
-			}
-		}
+        [NonSerialized]
+		private ILProcessor _IL;
+        protected ILProcessor IL => _IL;
 
-		protected ModuleDefinition Module
-		{
-			get
-			{
-				return Type.Module;
-			}
-		}
+        protected ModuleDefinition Module => Type.Module;
 
-		protected virtual void OnInjecting()
-		{
-			if (Injecting != null)
-			{
-				Injecting.Invoke(this, EventArgs.Empty);
-			}
-		}
+        protected virtual void OnInjecting() => Injecting?.Invoke();
 
-		protected virtual void OnInjected()
-		{
-			if (Injected != null)
-			{
-				Injected.Invoke(this, EventArgs.Empty);
-			}
-		}
+		protected virtual void OnInjected() => Injected?.Invoke();
 
 		#region Implementation of IInjector
 
 		public virtual void Inject(Injection injection, TypeDefinition type)
 		{
 			Injection = injection;
-			m_Type = type;
+			_type = type;
 
 			var injectMethods =
 				(from m in GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -229,18 +172,18 @@ namespace ModCMZ.Core.Injectors
 
 		private void Clear()
 		{
-			m_Method = null;
-			m_Body = null;
-			m_Instructions = null;
-			m_IL = null;
+			_method = null;
+			_body = null;
+			_instructions = null;
+			_IL = null;
 		}
 
 		private void Prepare(MethodDefinition method)
 		{
-			m_Method = method;
-			m_Body = Method.Body;
-			m_Instructions = Body.Instructions;
-			m_IL = Body.GetILProcessor();
+			_method = method;
+			_body = Method.Body;
+			_instructions = Body.Instructions;
+			_IL = Body.GetILProcessor();
 		}
 
 		protected MethodCreator CreateMethod(string name, cecil::MethodAttributes attributes)
@@ -426,6 +369,13 @@ namespace ModCMZ.Core.Injectors
 		{
 			var method = GetModMethod(format, prefix, suffix);
 			var paramCount = method.Parameters.Count;
+			var maxParamCount = Method.Parameters.Count + (Method.HasThis ? 1 : 0);
+
+			if (paramCount > maxParamCount)
+            {
+				throw new Exception($"Expected no more than {maxParamCount} parameter(s) for {Method.FullName}, but {method.FullName} requested {paramCount} parameter(s)");
+            }
+
 			var instrs = new Instruction[paramCount + 1];
 
 			for (var i = 0; i < paramCount && i < LdargOpCodes.Length; i++)

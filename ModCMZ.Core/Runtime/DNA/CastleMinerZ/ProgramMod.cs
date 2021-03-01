@@ -94,11 +94,17 @@ namespace ModCMZ.Core.Runtime.DNA.CastleMinerZ
 				using (CastleMinerZGame game = new CastleMinerZGame())
 				{
 					UpdatePaths();
-					game.Content = new ModContentManager(game.Services, "ReachContent", "HiDefContent", CastleMinerZGame.GlobalSettings.TextureQualityLevel);
-					game.Content.RootDirectory = "Content";
+
+                    var content = new ModContentManager(game.Services, "ReachContent", "HiDefContent", CastleMinerZGame.GlobalSettings.TextureQualityLevel)
+                    {
+                        RootDirectory = "Content"
+                    };
+
+					game.Content = content;
 					game.LicenseServices = onlineServices;
-					var y = ReflectionTools.GetAssemblies();
-					var x = ReflectionTools.GetTypes(new Filter<Type>((Type type) => type.IsSubclassOf(typeof(global::DNA.Net.Message)) && !type.IsAbstract));
+
+					app.OnClaimingContent(content);
+
 					game.Run();
 				}
 			}

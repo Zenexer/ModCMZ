@@ -8,6 +8,7 @@ using DNA;
 using DNA.CastleMinerZ;
 using DNA.Net.GamerServices;
 using Microsoft.Xna.Framework;
+using ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport;
 
 namespace ModCMZ.Core.Game
 {
@@ -31,6 +32,8 @@ namespace ModCMZ.Core.Game
         public bool IsInitialized { get; private set; }
         public CastleMinerZGame Game { get; private set; }
         public Form Form { get; private set; }
+
+        public ModContentManager Content => (ModContentManager)Game.Content;
 
         public GameApp()
         {

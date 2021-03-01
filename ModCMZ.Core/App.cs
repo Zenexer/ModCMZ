@@ -12,7 +12,10 @@ using diag = System.Diagnostics;
 using ModCMZ.Core.Mods.Core;
 using System.Threading;
 using System.Globalization;
-
+using Shell32;
+using ModCMZ.Core.Properties;
+using ModCMZ.Core.Runtime.DNA.CastleMinerZ.GraphicsProfileSupport;
+using Microsoft.Xna.Framework.Content;
 
 namespace ModCMZ.Core
 {
@@ -24,7 +27,7 @@ namespace ModCMZ.Core
 			"CastleMinerZ.exe",
 		};
 
-		private static string[] s_ReferenceAssemblies = null;
+		private static string[] _referencedAssemblies = null;
 
 		private static string[] s_Dependencies = new[]
 		{
@@ -35,6 +38,7 @@ namespace ModCMZ.Core
 
 		public static App Current { get; private set; }
 
+		public string Id => AppDomain.CurrentDomain.FriendlyName;
 		public DirectoryInfo MirrorDirectory { get; set; }
 		public DirectoryInfo TargetDirectory { get; set; }
 		public FileInfo[] TargetAssemblies { get; set; }
@@ -46,44 +50,23 @@ namespace ModCMZ.Core
 		public DirectoryInfo XnaDirectory { get; private set; }
 		public DirectoryInfo ModDirectory { get; private set; }
 		public GameApp Game { get; private set; }
-		public IMod[] Mods { get; private set; }
 
-		private CoreMod m_CoreMod = null;
-		public CoreMod CoreMod
+		private Dictionary<string, IMod> _mods = new Dictionary<string, IMod>();
+		public IReadOnlyDictionary<string, IMod> Mods => _mods;
+
+
+		private CoreMod _coreMod = null;
+		public CoreMod CoreMod => _coreMod ?? (_coreMod = GetMod<CoreMod>());
+
+		public string[] SearchPath => new[]
 		{
-			get
-			{
-				if (m_CoreMod == null)
-				{
-					m_CoreMod = GetMod<CoreMod>();
-				}
+			TargetDirectory.FullName,
+			AppDirectory.FullName,
+			XnaDirectory.FullName,
+		};
 
-				return m_CoreMod;
-			}
-		}
 
-		public string[] SearchPath
-		{
-			get
-			{
-				return new[]
-				{
-					TargetDirectory.FullName,
-					AppDirectory.FullName,
-					XnaDirectory.FullName,
-				};
-			}
-		}
-
-		public string Id
-		{
-			get
-			{
-				return AppDomain.CurrentDomain.FriendlyName;
-			}
-		}
-
-		public App()
+        public App()
 		{
 #if !DEBUG
 			AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -109,7 +92,7 @@ namespace ModCMZ.Core
 
 		public static void SetReferencedAssemblies(string[] referencedAssemblies)
 		{
-			s_ReferenceAssemblies = referencedAssemblies;
+			_referencedAssemblies = referencedAssemblies;
 		}
 
 		public static App Create()
@@ -124,13 +107,13 @@ namespace ModCMZ.Core
 			var app = Create();
 			app.Domain = AppDomain.CurrentDomain;
 			app.Game = new GameApp();
-			app.Mods = app.LoadMods();
+			app._mods = app.LoadMods();
 			return app;
 		}
 
 		public T GetMod<T>() where T : class, IMod
 		{
-			foreach (var mod in Mods.Select(m => m as T))
+			foreach (var mod in Mods.Values.Select(m => m as T))
 			{
 				if (mod != null)
 				{
@@ -141,13 +124,13 @@ namespace ModCMZ.Core
 			return null;
 		}
 
-		public IEnumerable<Assembly> GetModAssemblies() => Mods.Select(m => m.GetType().Assembly).Distinct();
+		public IEnumerable<Assembly> GetModAssemblies() => Mods.Values.Select(m => m.GetType().Assembly).Distinct();
 
 		public IEnumerable<Type> GetModTypes() => GetModAssemblies().SelectMany(a => a.GetTypes());
 
 		public Type GetModType(string fullName) => GetModTypes().Where(x => x.FullName == fullName).FirstOrDefault();
 
-		public IEnumerable<Type> GetModTypes<T>() => GetModTypes().Where(t => t.IsVisible && !t.IsAbstract && typeof(T).IsAssignableFrom(t));
+        public IEnumerable<Type> GetModTypes<T>() => GetModTypes().Where(t => t.IsVisible && !t.IsAbstract && typeof(T).IsAssignableFrom(t));
 
 		public IEnumerable<T> InstantiateModTypes<T>() where T : class
         {
@@ -276,30 +259,57 @@ namespace ModCMZ.Core
 				return;
 			}
 
-			foreach (var dir in new[]
-			{
-				Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Vanilla"),
-				@"C:\Program Files (x86)\Steam\steamapps\common",
-				@"F:\Program Files (x86)\Steam\steamapps\common",
-				@"C:\Program Files\Steam\steamapps\common",
-				@"D:\SteamLibrary\SteamApps\common",
-				@"D:\Games\Steam\steamapps\common",
-				@"D:\steam\steamapps\common",
-			})
-			{
-				if (!Directory.Exists(dir))
-				{
-					continue;
-				}
+			var cmzPath = Settings.Default.CmzPath;
 
-				var cmzDir = Path.Combine(dir, "CastleMiner Z");
+			if (string.IsNullOrWhiteSpace(cmzPath) || !Directory.Exists(cmzPath) || !File.Exists(Path.Combine(cmzPath, "CastleMinerZ.exe")))
+            {
+				var processes = Process.GetProcessesByName("steam");
 
-				if (Directory.Exists(cmzDir))
-				{
-					TargetDirectory = new DirectoryInfo(cmzDir);
+				if (processes.Length == 0)
+                {
+					Fatal("Steam must be running.  Launch Steam and restart ModCMZ.");
 					return;
-				}
+                }
+
+				var candidates = from process in processes
+								 let steamDir = Path.GetDirectoryName(process.MainModule.FileName)
+								 let cmz = Path.Combine(steamDir, "steamapps", "common", "CastleMiner Z", "CastleMinerZ.exe")
+								 where File.Exists(cmz)
+								 select cmz;
+
+				var cmzExe = candidates.Distinct().SingleOrDefault();
+
+				while (cmzExe == null || !File.Exists(cmzExe) || Path.GetFileName(cmzExe) != "CastleMinerZ.exe")
+                {
+					MessageBox.Show("Couldn't locate CastleMinerZ.exe.  You'll be prompted to locate it.  It should be in one of your Steam libraries.", "Locate CastleMiner Z", MessageBoxButtons.OK);
+					var dlg = new OpenFileDialog
+					{
+						AutoUpgradeEnabled = true,
+						CheckFileExists = true,
+						DefaultExt = "exe",
+						DereferenceLinks = true,
+						Filter = "CastleMiner Z (CastleMinerZ.exe)|CastleMinerZ.exe",
+						Title = "Locate CastleMiner Z",
+						Multiselect = false,
+					};
+
+					var result = dlg.ShowDialog();
+
+					if (result != DialogResult.OK)
+                    {
+						Fatal("Didn't select a file; exiting");
+						return;
+                    }
+
+					cmzExe = dlg.FileName;
+                }
+
+				cmzPath = Path.GetDirectoryName(cmzExe);
 			}
+
+			Settings.Default.CmzPath = cmzPath;
+			Settings.Default.Save();
+			TargetDirectory = new DirectoryInfo(cmzPath);
 		}
 
 		[Conditional("CLICKONCE")]
@@ -380,7 +390,7 @@ namespace ModCMZ.Core
 			return null;
 		}
 
-		private IMod[] LoadMods()
+		private Dictionary<string, IMod> LoadMods()
 		{
 			AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
@@ -399,7 +409,14 @@ namespace ModCMZ.Core
 				}
 			}
 
-			return LoadModsFromTypes(modTypes);
+			var mods = new Dictionary<string, IMod>();
+
+			foreach (var mod in LoadModsFromTypes(modTypes))
+            {
+				mods.Add(mod.Id, mod);
+            }
+
+			return mods;
 		}
 
 		private IMod[] LoadModsFromTypes(IEnumerable<Type> modTypes)
@@ -512,14 +529,14 @@ namespace ModCMZ.Core
 			try
 			{
 				Info("Loading mods");
-				Mods = LoadMods();
+				_mods = LoadMods();
 
-				var modAssemblies = (from m in Mods select m.GetType().Assembly).Distinct().ToArray();
+				var modAssemblies = (from m in Mods.Values select m.GetType().Assembly).Distinct().ToArray();
 				var types = GetModTypes();
-				s_ReferenceAssemblies = s_ReferenceAssemblies.Concat(from a in modAssemblies select a.Location).Distinct().ToArray();
+				_referencedAssemblies = _referencedAssemblies.Concat(from a in modAssemblies select a.Location).Distinct().ToArray();
 
 				Injection = new Injection(SearchPath);
-				foreach (var assembly in Mods.Select(m => m.GetType().Assembly).Distinct())
+				foreach (var assembly in Mods.Values.Select(m => m.GetType().Assembly).Distinct())
 				{
 					Injection.AddInjectors(assembly);
 					Injection.AddReplacers(assembly);
@@ -536,7 +553,7 @@ namespace ModCMZ.Core
 				}
 
 				Info("Loading referenced assemblies");
-				foreach (var file in s_ReferenceAssemblies)
+				foreach (var file in _referencedAssemblies)
 				{
 					deref.LoadAssembly(file);
 				}
@@ -582,7 +599,7 @@ namespace ModCMZ.Core
 
 		internal void OnGameReady(GameApp game)
 		{
-			foreach (var mod in Mods)
+			foreach (var mod in Mods.Values)
 			{
 				try
 				{
@@ -594,7 +611,7 @@ namespace ModCMZ.Core
 				}
 			}
 
-			foreach (var mod in Mods)
+			foreach (var mod in Mods.Values)
 			{
 				try
 				{
@@ -609,7 +626,7 @@ namespace ModCMZ.Core
 
 		internal void OnLaunching()
 		{
-			foreach (var mod in Mods)
+			foreach (var mod in Mods.Values)
 			{
 				try
 				{
@@ -624,7 +641,7 @@ namespace ModCMZ.Core
 
 		internal void OnLaunched()
 		{
-			foreach (var mod in Mods)
+			foreach (var mod in Mods.Values)
 			{
 				try
 				{
@@ -639,7 +656,7 @@ namespace ModCMZ.Core
 
 		internal void OnDomainReady()
 		{
-			foreach (var mod in Mods)
+			foreach (var mod in Mods.Values)
 			{
 				try
 				{
@@ -648,6 +665,36 @@ namespace ModCMZ.Core
 				catch (Exception ex)
 				{
 					OnModEventException(mod, "DomainReady", ex);
+				}
+			}
+		}
+
+		internal void OnRegisteringItems(ModContentManager content)
+		{
+			foreach (var mod in Mods.Values)
+			{
+				try
+				{
+					mod.OnRegisteringItems(content);
+				}
+				catch (Exception ex)
+				{
+					OnModEventException(mod, "RegisteringItems", ex);
+				}
+			}
+		}
+
+		internal void OnClaimingContent(ModContentManager content)
+		{
+			foreach (var mod in Mods.Values)
+			{
+				try
+				{
+					mod.OnClaimingContent(content);
+				}
+				catch (Exception ex)
+				{
+					OnModEventException(mod, "ClaimingContent", ex);
 				}
 			}
 		}

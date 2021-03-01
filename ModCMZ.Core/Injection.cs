@@ -160,25 +160,14 @@ namespace ModCMZ.Core
 				}
 				catch (Exception ex)
 				{
-					App.Current.Error("Error instantiating injector {0}:\r\n\r\n{1}", injector.Type.FullName, ex);
-					continue;
+					throw new Exception($"Error instantiating injector: {injector.Attribute.Type}; responsible mod: {injector.GetType().Assembly.GetName().Name}", ex);
 				}
 
-				try
-				{
-					var type = Module.GetType(injector.Attribute.Type);
-					Debug.Assert(type != null, "Target type for injection must exist");
-					instance.Inject(this, type);
-				}
-				catch (Exception ex)
-				{
-					if (Debugger.IsAttached)
-                    {
-						throw;
-                    }
+				var type = Module.GetType(injector.Attribute.Type)
+					?? throw new Exception($"Target type for injection doesn't exist: {injector.Attribute.Type}; responsible mod: {injector.GetType().Assembly.GetName().Name}");
 
-					App.Current.Error("Error running injector {0}:\r\n\r\n{1}", injector.Type.FullName, ex);
-				}
+
+				instance.Inject(this, type);
 			}
 		}
 

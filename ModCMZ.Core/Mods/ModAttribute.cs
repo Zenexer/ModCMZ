@@ -12,18 +12,19 @@ namespace ModCMZ.Core.Mods
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class ModAttribute : Attribute
     {
+        public string Id;
         public string Name;
         public string Author;
         public string VersionString;
         public string Description;
 
-        private Version m_Version;
+        private Version _version;
 
         public Version Version
         {
             get
             {
-                if (m_Version == null)
+                if (_version == null)
                 {
                     if (VersionString == null)
                     {
@@ -36,15 +37,16 @@ namespace ModCMZ.Core.Mods
                         throw new InvalidOperationException(string.Format("Version string for mod {0} is invalid.", Name));
                     }
 
-                    m_Version = version;
+                    _version = version;
                 }
 
-                return m_Version;
+                return _version;
             }
         }
 
-        public ModAttribute(string name)
+        public ModAttribute(string id, string name)
         {
+            Id = id;
             Name = name;
         }
     }
